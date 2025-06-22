@@ -23,7 +23,7 @@ llm_config = {
     "config_list": [
         {
             "api_type": "openai",
-            "api_key": "sk-or-...",  # <--- PUT YOUR OpenRouter KEY HERE!
+            "api_key": os.getenv("OPENROUTER_API_KEY", "**"),
             "base_url": "https://openrouter.ai/api/v1",
             "model": "mistralai/mistral-7b-instruct",
         }
@@ -46,10 +46,10 @@ if uploaded_file is not None:
             name="eda_agent",
             system_message="You are a data scientist who must use ONLY the provided tools for EDA.",
             llm_config=llm_config,
-            code_execution_config={"use_docker": False}  # No code exec, only tools
+            code_execution_config={"use_docker": False}
         )
 
-        # Register tools using function_map
+        # Register tools
         assistant.register_function(
             function_map={
                 "load_data_tool": load_data_tool,
@@ -73,15 +73,39 @@ if uploaded_file is not None:
                 max_turns=3
             )
 
-        # Show the most recent message from the agent
+        # Display messages after chat completes
         try:
-            last_msg = [
-                m["content"] for m in assistant.chat_messages if m["role"] == "assistant"
-            ]
-            if last_msg:
-                st.subheader("Agent Output:")
-                st.text(last_msg[-1])
+            st.subheader("📜 Full Agent Conversation Log")
+            all_messages = assistant.chat_messages
+
+            if not all_messages:
+                st.warning("No agent messages were generated.")
             else:
-                st.warning("No agent output was produced.")
+                for agent_name, messages in all_messages.items():
+                    for i, msg in enumerate(messages):
+                        role = msg.get("role", "").capitalize()
+                        content = msg.get("content", "")
+                        if not content:
+                            continue  # Skip empty messages
+
+                        # Display format
+                        if role == "User":
+                            st.markdown(f"**🧑‍💻 {agent_name} (Turn {i} - User):**")
+                            st.code(content, language="markdown")
+                        elif role == "Assistant":
+                            st.markdown(f"**🤖 {agent_name} (Turn {i} - Assistant):**")
+                            if "```" in content:
+                                st.code(content.replace("```python", "").replace("```", ""), language="python")
+                            else:
+                                st.success(content)
+                        elif role == "System":
+                            st.markdown(f"**⚙️ {agent_name} (System):**")
+                            st.info(content)
+                        else:
+                            st.markdown(f"**{agent_name} ({role}):**")
+                            st.text(content)
+
         except Exception as e:
-            st.error(f"Could not get agent output: {e}")
+            st.error(f"Error displaying messages: {e}")
+
+
