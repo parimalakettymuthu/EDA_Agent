@@ -33,7 +33,7 @@ def missing_value_analysis_tool(csv_path: str) -> str:
 # ---- Use OpenRouter via LiteLLM (not LangChain LLMs!) ----
 llm_params = {
     "model": "mistralai/mistral-7b-instruct",
-    "api_key": "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",
+    "api_key": "**",
     "api_base": "https://openrouter.ai/api/v1"
     
 }
