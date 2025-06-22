@@ -1,0 +1,6 @@
+streamlit
+pandas>=1.5
+langchain>=0.1
+langchain-community>=0.0.15
+langchain-openai
+langgraph
