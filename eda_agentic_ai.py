@@ -23,7 +23,7 @@ llm_config = {
     "config_list": [
         {
             "api_type": "openai",
-            "api_key": os.getenv("OPENROUTER_API_KEY", "**"),
+            "api_key": os.getenv("OPENROUTER_API_KEY", "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"),
             "base_url": "https://openrouter.ai/api/v1",
             "model": "mistralai/mistral-7b-instruct",
         }
