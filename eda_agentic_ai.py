@@ -2,6 +2,11 @@ import streamlit as st
 import pandas as pd
 import os
 from autogen import AssistantAgent, UserProxyAgent
+from dotenv import load_dotenv
+load_dotenv()
+api_key = os.getenv("OPENROUTER_API_KEY")
+assert api_key, "❌ Environment variable OPENROUTER_API_KEY is not set."
+
 
 # ---- TOOL DEFINITIONS ----
 def load_data_tool(filename: str) -> str:
@@ -23,7 +28,7 @@ llm_config = {
     "config_list": [
         {
             "api_type": "openai",
-            "api_key": os.getenv("OPENROUTER_API_KEY", "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"),
+            "api_key": api_key,
             "base_url": "https://openrouter.ai/api/v1",
             "model": "mistralai/mistral-7b-instruct",
         }
@@ -31,7 +36,7 @@ llm_config = {
     "seed": 42,
 }
 
-st.title("Autogen EDA Agent Demo (Mistral on OpenRouter)")
+st.title("EDA Agent")
 
 uploaded_file = st.file_uploader("Choose a CSV file for analysis", type=["csv"])
 if uploaded_file is not None:
@@ -44,7 +49,11 @@ if uploaded_file is not None:
     if st.button("Run EDA Agent"):
         assistant = AssistantAgent(
             name="eda_agent",
-            system_message="You are a data scientist who must use ONLY the provided tools for EDA.",
+            system_message=(
+                "You are a data scientist AI agent. You MUST NOT write or generate Python code directly. "
+                "You can only complete the task using registered tools. Call `load_data_tool` and then pass its result to `missing_value_analysis_tool`. "
+                "Return ONLY the result of the tool — do not summarize or assume anything about the file structure."
+            ),
             llm_config=llm_config,
             code_execution_config={"use_docker": False}
         )
@@ -66,9 +75,10 @@ if uploaded_file is not None:
         with st.spinner("Running EDA agent via Autogen..."):
             user.initiate_chat(
                 assistant,
-                message=(
-                    f"1. Use 'load_data_tool' to load the file '{file_path}'.\n"
-                    f"2. Use 'missing_value_analysis_tool' on the loaded path and return the results."
+                message = (
+                    f"Step 1: Use the registered tool `load_data_tool('{file_path}')` and store its return value.\n"
+                    f"Step 2: Call `missing_value_analysis_tool()` using the result from Step 1.\n"
+                    f"Do not generate or write code. Do not explain anything. Return ONLY the string output from the tool call."
                 ),
                 max_turns=3
             )
