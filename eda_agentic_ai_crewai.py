@@ -75,39 +75,39 @@ def outlier_detection_tool(csv_path: str) -> str:
         result += f"{col}: {outliers.sum()} outliers\n"
     return result
 
-@tool('generate_visualizations_tool')
-def generate_visualizations_tool(csv_path: str) -> str:
-    """
-    Generate and save visualizations including histograms, bar charts, and pair plots 
-    for the given CSV file. The function creates plots for numerical and categorical 
-    columns and saves them as PNG files in the 'outputs/plots' directory. Returns a 
-    confirmation message listing the types of visualizations generated.
-    """
-    df = pd.read_csv(csv_path)
-    output_dir = tempfile.mkdtemp()
-    plots = []
-    for col in df.select_dtypes(include=['float64', 'int64']).columns[:3]:
-        fig, ax = plt.subplots()
-        sns.histplot(df[col].dropna(), kde=True, ax=ax)
-        img_path = os.path.join(output_dir, f"hist_{col}.png")
-        fig.savefig(img_path)
-        plots.append(img_path)
-        plt.close()
-    return f"Plots saved at: {output_dir}\n" + "\n".join(plots)
+# @tool('generate_visualizations_tool')
+# def generate_visualizations_tool(csv_path: str) -> str:
+#     """
+#     Generate and save visualizations including histograms, bar charts, and pair plots 
+#     for the given CSV file. The function creates plots for numerical and categorical 
+#     columns and saves them as PNG files in the 'outputs/plots' directory. Returns a 
+#     confirmation message listing the types of visualizations generated.
+#     """
+#     df = pd.read_csv(csv_path)
+#     output_dir = tempfile.mkdtemp()
+#     plots = []
+#     for col in df.select_dtypes(include=['float64', 'int64']).columns[:3]:
+#         fig, ax = plt.subplots()
+#         sns.histplot(df[col].dropna(), kde=True, ax=ax)
+#         img_path = os.path.join(output_dir, f"hist_{col}.png")
+#         fig.savefig(img_path)
+#         plots.append(img_path)
+#         plt.close()
+#     return f"Plots saved at: {output_dir}\n" + "\n".join(plots)
 
 # ---- PDF Export Function ----
-def generate_pdf_report(results: str):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=10)
-    for line in results.split("\n"):
-        pdf.cell(200, 6, txt=line, ln=True)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        pdf.output(tmp.name)
-        tmp.seek(0)
-        b64 = base64.b64encode(tmp.read()).decode()
-        href = f'<a href="data:application/pdf;base64,{b64}" download="EDA_Report.pdf">📄 Download PDF Report</a>'
-        return href
+# def generate_pdf_report(results: str):
+#     pdf = FPDF()
+#     pdf.add_page()
+#     pdf.set_font("Arial", size=10)
+#     for line in results.split("\n"):
+#         pdf.cell(200, 6, txt=line, ln=True)
+#     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+#         pdf.output(tmp.name)
+#         tmp.seek(0)
+#         b64 = base64.b64encode(tmp.read()).decode()
+#         href = f'<a href="data:application/pdf;base64,{b64}" download="EDA_Report.pdf">📄 Download PDF Report</a>'
+#         return href
 
 # ---- LLM Config ----
 llm_params = {
@@ -139,16 +139,16 @@ if uploaded_file is not None:
                 missing_value_analysis_tool,
                 univariate_analysis_tool,
                 correlation_analysis_tool,
-                outlier_detection_tool,
-                generate_visualizations_tool
+                outlier_detection_tool
+                #,generate_visualizations_tool
             ],
             preferred_tools_order=[
                 "load_data_tool",
                 "missing_value_analysis_tool",
                 "univariate_analysis_tool",
                 "correlation_analysis_tool",
-                "outlier_detection_tool",
-                "generate_visualizations_tool"
+                "outlier_detection_tool"#,
+                #"generate_visualizations_tool"
             ]
         )
 
@@ -168,4 +168,4 @@ if uploaded_file is not None:
 
         st.subheader("✅ Final EDA Report")
         st.code(result, language="text")
-        st.markdown(generate_pdf_report(result), unsafe_allow_html=True)
+        # st.markdown(result, unsafe_allow_html=True)
